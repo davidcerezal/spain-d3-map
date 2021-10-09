@@ -1,0 +1,106 @@
+#rangeFrom {
+    float: left;
+}
+
+#rangeTo {
+    float: right;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0;
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+.selected-country {
+    fill: #236FC7;
+}
+
+.affected-marker {
+    fill: #236FC7;
+    fill-opacity: 0.7;
+}
+
+.affected-marker:hover {
+    stroke-width: 1;
+    stroke: #333;
+    fill: #002A56;
+    fill-opacity: 0.9;
+}
+
+#styling-after-slider {
+    margin-top: 3em;
+}
+
+#styling-after-slider .ui-slider-pip {
+    top: -12px;
+}
+
+#styling-after-slider .ui-slider-pip .ui-slider-label {
+    top: -18px;
+}
+
+#scale-slider.ui-slider {
+    border-radius: 0px;
+    background: #c7cdd5;
+    border: none;
+    height: 2px;
+    margin: 1em 4em 4em;
+}
+
+
+.ui-slider-label {
+    width: 75px !important;
+    font-size: 11px;
+    margin-left: -36px !important;
+}
+
+.ui-slider-tip {
+    width: 75px !important;
+    font-size: 11px;
+    margin-left: -39px !important;
+}
+
+.slider .ui-slider-handle {
+    outline: 0;
+    background: #236FC7;
+    border-radius: 50%;
+    height: .6em;
+    width: .6em;
+    margin-left: -6px;
+}
+
+.slider.ui-slider-horizontal {
+    top: 1em;
+    left: 5%;
+    height: .2em;
+    width: 90%;
+}
+.ui-slider-pips [class*=ui-slider-pip-selected] {
+    color: #444444;
+}
+
+.ui-slider-pips .ui-slider-pip {
+    top:15px;
+}
+
+.fa {
+    color: #333;
+    font-size: 12px;
+}
+.section {
+    background-color: white;
+    border: #0a223c;
+    padding: 20px;
+}
+.ui-widget-header {
+    background: #236FC7 !important;
+}
+.ui-state-active, .ui-widget-content .ui-state-active, .ui-widget-header .ui-state-active {
+    border: 1px #236FC7;
+}

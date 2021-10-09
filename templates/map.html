@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link rel="stylesheet" href="../static/css/jquery-ui.min.css">
+    <link rel="stylesheet" href="../static/css/jquery-ui.theme.min.css">
+    <link rel="stylesheet" href="../static/css/jquery-ui.structure.min.css">
+    <link rel="stylesheet" href="../static/css/jquery-ui-slider-pips.css">
+    <link rel="stylesheet" href="../static/css/custom-style.css">
+    <script src="../static/js/jquery-2.1.3.min.js"></script>
+    <script src="../static/js/jquery-ui.min.js"></script>
+    <script src="../static/js/jquery-ui-slider-pips.js"></script>
+    <script src="../static/js/d3/d3.v6.min.js"></script>
+    <script src="../static/js/d3/d3-composite-projections.js"></script>
+    <script src="../static/js/d3/topojson.v3.min.js"></script>
+</head>
+
+
+<body>
+
+<div style="width: 700px;margin: 5%">
+    <h2>Mapa evolución clientes</h2>
+    <div style="margin-bottom: 4%">
+        <button class="btn btn-run" data-value="1"><i class="fa fa-play"></i></button>
+        <div class="slider scale-slider" style="margin-left: 20px;margin-top:-30px;"></div>
+    </div>
+    <svg width="800" height="500"></svg>
+    <div id="svg_tooltip"></div>
+</div>
+</body>
+
+<script>
+
+    var address_data = {{ locations_params | tojson }};
+
+    //-------------Get borders of provinces in Spain-------------
+    $.ajax({
+        url: "https://unpkg.com/es-atlas@0.2.0/es/municipalities.json",
+        dataType: "json",
+        async: false,
+        success: function (data) {
+            es = data;
+        }
+    });
+
+    // -------------SHOW MAP-------------
+    const svg = d3.select("svg");
+    const projection = d3.geoConicConformalSpain().fitSize([900, 500], topojson.feature(es, es.objects.provinces));
+    const path = d3.geoPath(projection);
+
+    //Operation functions
+    const affectedRadiusScale = d3
+        .scaleLinear()
+        .domain([0, 20])
+        .range([2, 5]);
+
+    const calculateRadiusBasedOnAffectedCases = (count) => {
+        return count ? affectedRadiusScale(count) : 0;
+    };
+
+
+    //Mapping options
+    d3.select("#svg_tooltip")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+
+
+    svg.append("g")
+        .selectAll("path")
+        .data(topojson.feature(es, es.objects.provinces).features)
+        .join("path")
+        .attr("fill", '#ccc')
+        .attr("d", path);
+
+    svg.append("path")
+        .datum(topojson.mesh(es, es.objects.provinces, (a, b) => a !== b))
+        .attr("fill", "none")
+        .attr("stroke", "white")
+        .attr("stroke-opacity", 0.25)
+        .attr("d", path);
+
+    svg.append("path")
+        .datum(topojson.mesh(es, es.objects.autonomous_regions, (a, b) => a !== b))
+        .attr("fill", "none")
+        .attr("stroke", "white")
+        .attr("d", path);
+
+    svg
+        .append("path")
+        .attr("d", projection.getCompositionBorders())
+        .attr("fill", "none")
+        .attr("stroke", "black");
+
+
+    //  ------------- SHOW POINTS-------------ç
+    const mouseover = (event, d) => {
+        d3.select("#svg_tooltip").transition()
+            .duration(200)
+            .style("opacity", .9);
+        d3.select("#svg_tooltip").html(d.name + ' (' + d.count + ')')
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+    };
+
+    const mouseleave = (d) =>{
+        d3.select("#svg_tooltip").transition()
+            .duration(500)
+            .style("opacity", 0);
+    };
+
+    const updateStats = (name) => {
+        svg.selectAll('circle').remove();
+        svg.selectAll("circle")
+            .data(name)
+            .enter()
+            .append("circle")
+            .attr("class", "affected-marker")
+            .attr("r", d => calculateRadiusBasedOnAffectedCases(d.count))
+            .attr("cx", d => projection([d.long, d.lat])[0])
+            .attr("cy", d => projection([d.long, d.lat])[1])
+            .on("mouseover", this.mouseover)
+            .on("mouseout", this.mouseleave);
+    };
+
+    updateStats(JSON.parse(address_data.files_contents[0]), projection)
+
+
+    // ------------- SLIDER AND RUN/PAUSE -------------
+    const run_btn = $(".btn-run");
+    const animationDelay = 300;
+    var sliderVal = 0;
+    var sliderInterval = {};
+
+    //Init slider
+    $(".slider").slider({
+        range: "min",
+        min: 0,
+        max: address_data.files.length - 1,
+        animate: "fast",
+
+        change: function (event, ui) {
+            updateStats(JSON.parse(address_data.files_contents[ui.value]), projection);
+        },
+        slide: function (event, ui) {
+            updateStats(JSON.parse(address_data.files_contents[ui.value]), projection);
+        }
+    }).slider("pips", {
+        first: "label",
+        last: "label",
+        labels: address_data.files,
+    }).slider("float", {
+        labels: address_data.files,
+    });
+
+
+    //Init run btn
+    run_btn.on("click", function() {
+        if ($(this).data("value") === 1) {
+            sliderVal = $(".slider").slider("value");
+            sliderInterval = setInterval(function () {
+                sliderVal += 1;
+                if (sliderVal >= (address_data.files.length)) {
+                    clearInterval(sliderInterval);
+                    run_btn.html('<i class="fa fa-play"></i>');
+                    run_btn.data("value", 1);
+                } else {
+                    $(".slider").slider("value", sliderVal);
+                }
+            }, animationDelay);
+            $(this).html('<i class="fa fa-pause"></i>');
+            $(this).data("value", 0);
+        } else {
+            clearInterval(sliderInterval);
+            $(this).html('<i class="fa fa-play"></i>');
+            $(this).data("value", 1);
+        }
+    });
+
+</script>
+
+<style>
+</style>
