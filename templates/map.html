@@ -47,28 +47,6 @@
     const projection = d3.geoConicConformalSpain().fitSize([900, 500], topojson.feature(es, es.objects.provinces));
     const path = d3.geoPath(projection);
 
-    //Operation functions
-    const affectedRadiusScale = d3
-        .scaleLinear()
-        .domain([0, 20])
-        .range([2, 5]);
-
-    const calculateRadiusBasedOnAffectedCases = (count) => {
-        return count ? affectedRadiusScale(count) : 0;
-    };
-
-
-    //Mapping options
-    d3.select("#svg_tooltip")
-        .style("opacity", 0)
-        .attr("class", "tooltip")
-        .style("background-color", "white")
-        .style("border", "solid")
-        .style("border-width", "1px")
-        .style("border-radius", "5px")
-        .style("padding", "5px")
-
-
     svg.append("g")
         .selectAll("path")
         .data(topojson.feature(es, es.objects.provinces).features)
@@ -94,6 +72,28 @@
         .attr("d", projection.getCompositionBorders())
         .attr("fill", "none")
         .attr("stroke", "black");
+
+
+    //Operation functions
+    const affectedRadiusScale = d3
+        .scaleLinear()
+        .domain([0, 20])
+        .range([2, 5]);
+
+    const calculateRadiusBasedOnAffectedCases = (count) => {
+        return count ? affectedRadiusScale(count) : 0;
+    };
+
+
+    //Mapping options
+    d3.select("#svg_tooltip")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
 
 
     //  ------------- SHOW POINTS-------------ç
